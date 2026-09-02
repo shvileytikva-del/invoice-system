@@ -77,7 +77,8 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
 
     try {
       const supabase = createClient();
-      const safeName = file.name.replace(/[^a-zA-Z0-9._\-\u0590-\u05FF ]/g, '_');
+           const ext = file.name.split('.').pop() || 'pdf';
+      const safeName = 'receipt_' + Date.now() + '.' + ext;
       const path = `${invoice.id}/${safeName}`;
       const { error: uploadError } = await supabase.storage.from('receipts').upload(path, file, { upsert: true });
       if (uploadError) throw new Error('העלאת הקובץ נכשלה: ' + uploadError.message);
