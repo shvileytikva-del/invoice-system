@@ -6,7 +6,7 @@ import type { Invoice } from '@/lib/types';
 export const dynamic = 'force-dynamic';
 
 export default async function ReportsPage() {
-  await requireRole(['admin']);
+  await requireRole(['admin', 'secretary']);
   const supabase = createServerSupabaseClient();
 
   const { data: invoices } = await supabase

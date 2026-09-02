@@ -20,7 +20,7 @@ export default function NavBar({ user }: { user: AppUser }) {
     { href: '/', label: 'Dashboard', roles: ['secretary', 'admin'] },
     { href: '/my-invoices', label: 'החשבוניות שלי', roles: ['school_user'] },
     { href: '/invoices/new', label: 'חשבונית חדשה', roles: ['school_user', 'secretary', 'admin'] },
-    { href: '/reports', label: 'דוחות', roles: ['admin'] },
+    { href: '/reports', label: 'דוחות', roles: ['admin', 'secretary'] },
     { href: '/admin/users', label: 'ניהול משתמשים', roles: ['admin'] },
   ];
 
