@@ -60,7 +60,7 @@ export default function NewInvoicePage() {
 
     try {
       if (file) {
-        const safeName = file.name.replace(/[^a-zA-Z0-9._\-\u0590-\u05FF ]/g, '_');
+      const ext = file.name.split('.').pop() || 'pdf'; const safeName = 'invoice_' + Date.now() + '.' + ext;
         const path = `${invoiceId}/${safeName}`;
         const { error: uploadError } = await supabase.storage.from('invoices').upload(path, file, {
           upsert: false,
