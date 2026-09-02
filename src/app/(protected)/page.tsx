@@ -1,5 +1,10 @@
-import { redirect } from 'next/navigation';
 import { requireUser } from '@/lib/auth';
+import { redirect } from 'next/navigation';
+import { createServerSupabaseClient } from '@/lib/supabase/server';
+import { computeInvoiceFlags } from '@/lib/types';
+import DashboardClient from './DashboardClient';
+
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const user = await requireUser();
@@ -8,14 +13,29 @@ export default async function HomePage() {
     redirect('/my-invoices');
   }
 
-  // Dashboard מלא (כרטיסי סטטוס + טבלה + סינון) ייבנה בשלב 2.
-  return (
-    <div className="max-w-3xl mx-auto px-4 py-16 text-center">
-      <h1 className="font-display font-bold text-2xl mb-2">שלום, {user.name}</h1>
-      <p className="text-muted text-sm">
-        ה-Dashboard המלא (חשבוניות ממתינות, חסרות קבלה, הושלמו, וסך הכל) יתווסף בשלב הבא.
-        בינתיים, אפשר להעלות חשבונית חדשה דרך התפריט למעלה.
-      </p>
-    </div>
-  );
+  const supabase = createServerSupabaseClient();
+
+  const { data: invoices } = await supabase
+    .from('invoices')
+    .select('*, uploader:users!uploaded_by(name)')
+    .order('uploaded_at', { ascending: false });
+
+  const { data: allUsers } = await supabase
+    .from('users')
+    .select('id, name')
+    .eq('is_active', true);
+
+  const enriched = (invoices ?? []).map((inv: any) => {
+    const { is_overdue, is_completed } = computeInvoiceFlags(inv);
+    return {
+      ...inv,
+      is_overdue,
+      is_completed,
+      uploader_name: inv.uploader?.name ?? '—',
+    };
+  });
+
+  const uploaders = (allUsers ?? []).map((u: any) => ({ id: u.id, name: u.name }));
+
+  return <DashboardClient invoices={enriched} uploaders={uploaders} userRole={user.role} />;
 }
