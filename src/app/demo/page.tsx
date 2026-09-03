@@ -87,7 +87,7 @@ export default function DemoPage() {
       <div className="bg-brand text-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-5 py-3 flex-wrap gap-3">
           <div className="flex items-center gap-3">
-            <Image src="/logo.png" alt="שבילי תקווה" width={36} height={36} className="rounded-full" />
+           <span className="font-display font-bold text-lg">מעקב חשבוניות — מוסד לדוגמה</span>
             <span className="font-display font-bold text-lg">מעקב חשבוניות</span>
             <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-sm mr-1">דמו</span>
           </div>
@@ -294,7 +294,7 @@ export default function DemoPage() {
           <h2 className="font-display font-bold text-xl mb-3">מעוניינים במערכת דומה עבור הארגון שלכם?</h2>
           <p className="text-sm text-white/70 mb-6">המערכת מותאמת אישית לצרכים של מוסדות חינוך, עמותות וארגונים. כולל: הרשאות, העלאת קבצים, מעקב תשלומים, דוחות, והתראות מייל.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
-            <a href="mailto:DB0533139917@GMAIL.COM?subject=מעוניין/ת במערכת מעקב חשבוניות" className="inline-block bg-white text-brand font-bold text-sm px-8 py-3 hover:bg-brandPinkLight transition-colors rounded-sm">שלחו מייל</a>
+            <a href=https://mail.google.com/mail/?view=cm&fs=1&to=DB0533139917@GMAIL.COM&su=מעוניין/ת במערכת מעקב חשבוניות className="inline-block bg-white text-brand font-bold text-sm px-8 py-3 hover:bg-brandPinkLight transition-colors rounded-sm">שלחו מייל</a>
             <a href="tel:0533139917" className="inline-block border border-white/40 text-white font-medium text-sm px-8 py-3 hover:bg-white/10 transition-colors rounded-sm">חייגו 053-313-9917</a>
           </div>
           <div className="flex justify-center items-center gap-3 pt-4 border-t border-white/10">
