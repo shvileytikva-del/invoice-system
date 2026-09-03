@@ -1,8 +1,9 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-// דפים שנגישים גם בלי התחברות
-const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth/no-access', '/demo'];
+// דפים שנגישים גם בלי התחברות.
+// /api/reminders מוגן במפתח סודי משלו (ראה route.ts), ולכן לא צריך session.
+const PUBLIC_PATHS = ['/login', '/auth/callback', '/auth/no-access', '/demo', '/api/reminders'];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request: { headers: request.headers } });
