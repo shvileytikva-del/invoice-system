@@ -10,8 +10,8 @@ html {
 
 body {
   font-family: 'Heebo', sans-serif;
-  background-color: theme('colors.paper');
-  color: theme('colors.ink');
+  background-color: #FDF5F9;
+  color: #2D2B6B;
 }
 
 h1, h2, h3, .font-display {
@@ -20,4 +20,9 @@ h1, h2, h3, .font-display {
 
 * {
   box-sizing: border-box;
+}
+
+::selection {
+  background-color: #F0C4D8;
+  color: #2D2B6B;
 }

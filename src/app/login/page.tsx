@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { createClient } from '@/lib/supabase/client';
 
 export default function LoginPage() {
@@ -24,15 +25,24 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-paper px-4">
-      <div className="max-w-sm w-full border border-line bg-white p-8 text-center">
-        <h1 className="font-display font-bold text-2xl mb-2">מעקב חשבוניות</h1>
-        <p className="text-sm text-muted mb-8">מערכת ניהול חשבוניות ותשלומים לתיכון</p>
+    <div className="min-h-screen flex items-center justify-center bg-brandPinkPale px-4">
+      <div className="max-w-sm w-full bg-white border border-line p-8 text-center rounded-sm shadow-sm">
+        <div className="flex justify-center mb-4">
+          <Image
+            src="/logo.png"
+            alt="שבילי תקווה"
+            width={80}
+            height={80}
+            className="rounded-full"
+          />
+        </div>
+        <h1 className="font-display font-bold text-2xl text-brand mb-1">מעקב חשבוניות</h1>
+        <p className="text-sm text-muted mb-8">תיכון שבילי תקווה — בית יעקב בית שאן</p>
 
         <button
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center gap-3 border border-ink py-3 font-medium text-sm hover:bg-ink hover:text-white transition-colors disabled:opacity-50"
+          className="w-full flex items-center justify-center gap-3 bg-brand text-white py-3 font-medium text-sm hover:bg-brandLight transition-colors disabled:opacity-50 rounded-sm"
         >
           <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true">
             <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.5 6.1 29.5 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.5z"/>
@@ -46,7 +56,7 @@ export default function LoginPage() {
         {error && <p className="text-overdue text-sm mt-4">{error}</p>}
 
         <p className="text-xs text-muted mt-6">
-          כניסה עם חשבון הגוגל של התיכון או של העמותה. אם המערכת לא מזהה אתכם, פנו למנהל/ת המערכת.
+          כניסה עם חשבון הגוגל של התיכון או של העמותה.
         </p>
       </div>
     </div>
