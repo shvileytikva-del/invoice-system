@@ -21,6 +21,14 @@ const DEMO_INVOICES = [
   { id:'12', supplier_name:'שירותי ניקיון אור', supplier_email:'', invoice_number:'ON-2026-08', invoice_date:'2026-08-01', amount:9200, description:'ניקיון חודשי — אוגוסט', due_date:'2026-08-31', uploaded_by:'רחל כהן', uploaded_at:'2026-08-02T07:00:00Z', payment_status:'paid', payment_date:'2026-08-29', payment_method:'העברה בנקאית', payment_reference:'55-449920', receipt_status:'received', notes:'כולל ניקיון כללי לפני פתיחת שנה' },
 ];
 
+const CONTACT_EMAIL = 'DB0533139917@GMAIL.COM';
+const CONTACT_PHONE = '0533139917';
+const GMAIL_COMPOSE_URL =
+  'https://mail.google.com/mail/?view=cm&fs=1&to=' +
+  encodeURIComponent(CONTACT_EMAIL) +
+  '&su=' +
+  encodeURIComponent('מעוניין/ת במערכת מעקב חשבוניות');
+
 type DemoInvoice = typeof DEMO_INVOICES[number];
 type FilterStatus = 'all' | 'pending' | 'paid_no_receipt' | 'completed' | 'overdue';
 type DemoView = 'dashboard' | 'new-invoice' | 'reports';
@@ -294,7 +302,7 @@ export default function DemoPage() {
           <h2 className="font-display font-bold text-xl mb-3">מעוניינים במערכת דומה עבור הארגון שלכם?</h2>
           <p className="text-sm text-white/70 mb-6">המערכת מותאמת אישית לצרכים של מוסדות חינוך, עמותות וארגונים. כולל: הרשאות, העלאת קבצים, מעקב תשלומים, דוחות, והתראות מייל.</p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mb-6">
-            <a href="https://mail.google.com/mail/?view=cm&fs=1&to=DB0533139917@GMAIL.COM&su=מעוניין/ת%20במערכת%20מעקב%20חשבוניות" className="inline-block bg-white text-brand font-bold text-sm px-8 py-3 hover:bg-brandPinkLight transition-colors rounded-sm">שלחו מייל</a>
+            <a href={GMAIL_COMPOSE_URL} target="_blank" rel="noopener noreferrer" className="inline-block bg-white text-brand font-bold text-sm px-8 py-3 hover:bg-brandPinkLight transition-colors rounded-sm">שלחו מייל</a>
             <a href="tel:0533139917" className="inline-block border border-white/40 text-white font-medium text-sm px-8 py-3 hover:bg-white/10 transition-colors rounded-sm">חייגו 053-313-9917</a>
           </div>
           <div className="flex justify-center items-center gap-3 pt-4 border-t border-white/10">
