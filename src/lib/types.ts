@@ -14,11 +14,12 @@ export interface AppUser {
 export interface Invoice {
   id: string;
   supplier_name: string;
+  supplier_email: string | null;
   invoice_number: string;
   invoice_date: string; // YYYY-MM-DD
   amount: number;
   description: string | null;
-  due_date: string; // YYYY-MM-DD
+  due_date: string | null; // YYYY-MM-DD or null
 
   uploaded_by: string;
   uploaded_at: string;
@@ -58,6 +59,6 @@ export interface ActivityLogEntry {
 export function computeInvoiceFlags(inv: Invoice): { is_overdue: boolean; is_completed: boolean } {
   const today = new Date().toISOString().slice(0, 10);
   const is_completed = inv.payment_status === 'paid' && inv.receipt_status === 'received';
-  const is_overdue = inv.payment_status === 'pending' && inv.due_date < today;
+  const is_overdue = inv.payment_status === 'pending' && !!inv.due_date && inv.due_date < today;
   return { is_overdue, is_completed };
 }

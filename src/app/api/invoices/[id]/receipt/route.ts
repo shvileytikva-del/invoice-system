@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/activityLog';
+import { sendWebhook } from '@/lib/webhook';
 
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
   const supabase = createServerSupabaseClient();
@@ -39,6 +40,13 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     invoiceId: params.id,
     oldValue: { receipt_status: 'missing' },
     newValue: { receipt_status: 'received', receipt_file },
+  });
+
+  // Webhook ל-Make: קבלה הועלתה
+  await sendWebhook({
+    event: 'receipt_uploaded',
+    invoice: updated,
+    performed_by: appUser.name,
   });
 
   return NextResponse.json({ invoice: updated });

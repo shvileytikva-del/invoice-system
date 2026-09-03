@@ -22,9 +22,9 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
 
   const { is_overdue, is_completed } = computeInvoiceFlags(invoice);
 
-  // Generate signed URLs for files
   let invoiceFileUrl: string | null = null;
   let receiptFileUrl: string | null = null;
+  let paymentProofFileUrl: string | null = null;
 
   if (invoice.invoice_file) {
     const { data } = await supabase.storage
@@ -40,6 +40,13 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
     receiptFileUrl = data?.signedUrl ?? null;
   }
 
+  if (invoice.payment_proof_file) {
+    const { data } = await supabase.storage
+      .from('invoices')
+      .createSignedUrl(invoice.payment_proof_file, 3600);
+    paymentProofFileUrl = data?.signedUrl ?? null;
+  }
+
   const enriched = {
     ...invoice,
     is_overdue,
@@ -52,6 +59,7 @@ export default async function InvoiceDetailPage({ params }: { params: { id: stri
       invoice={enriched}
       invoiceFileUrl={invoiceFileUrl}
       receiptFileUrl={receiptFileUrl}
+      paymentProofFileUrl={paymentProofFileUrl}
       userRole={user.role}
     />
   );

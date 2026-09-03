@@ -11,10 +11,11 @@ interface Props {
   invoice: InvoiceWithComputed;
   invoiceFileUrl: string | null;
   receiptFileUrl: string | null;
+  paymentProofFileUrl: string | null;
   userRole: UserRole;
 }
 
-export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFileUrl, userRole }: Props) {
+export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFileUrl, paymentProofFileUrl, userRole }: Props) {
   const router = useRouter();
   const canEdit = userRole === 'secretary' || userRole === 'admin';
   const [showPayForm, setShowPayForm] = useState(false);
@@ -28,16 +29,36 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
     payment_reference: '',
     payment_note: '',
   });
+  const [proofFile, setProofFile] = useState<File | null>(null);
 
   async function handleMarkPaid(e: React.FormEvent) {
     e.preventDefault();
     setPayLoading(true);
     setError(null);
+
     try {
+      const supabase = createClient();
+      let proofFilePath: string | null = null;
+
+      if (proofFile) {
+        if (proofFile.size > 8 * 1024 * 1024) {
+          throw new Error('קובץ האסמכתא גדול מדי (מקסימום 8MB)');
+        }
+        const ext = proofFile.name.split('.').pop() || 'pdf';
+        const safeName = 'proof_' + Date.now() + '.' + ext;
+        const path = `${invoice.id}/${safeName}`;
+        const { error: uploadError } = await supabase.storage.from('invoices').upload(path, proofFile, { upsert: true });
+        if (uploadError) throw new Error('העלאת קובץ האסמכתא נכשלה: ' + uploadError.message);
+        proofFilePath = path;
+      }
+
       const res = await fetch(`/api/invoices/${invoice.id}/pay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payForm),
+        body: JSON.stringify({
+          ...payForm,
+          payment_proof_file: proofFilePath,
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'שגיאה בסימון תשלום');
@@ -77,7 +98,7 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
 
     try {
       const supabase = createClient();
-           const ext = file.name.split('.').pop() || 'pdf';
+      const ext = file.name.split('.').pop() || 'pdf';
       const safeName = 'receipt_' + Date.now() + '.' + ext;
       const path = `${invoice.id}/${safeName}`;
       const { error: uploadError } = await supabase.storage.from('receipts').upload(path, file, { upsert: true });
@@ -135,7 +156,8 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
         {/* Details */}
         <div className="p-5 border-b border-line grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
           <Detail label="תאריך חשבונית" value={formatDate(invoice.invoice_date)} />
-          <Detail label="תאריך אחרון לתשלום" value={formatDate(invoice.due_date)} />
+          <Detail label="תאריך אחרון לתשלום" value={invoice.due_date ? formatDate(invoice.due_date) : 'לא צוין'} />
+          <Detail label="מייל ספק" value={(invoice as any).supplier_email || '—'} />
           <Detail label="עבור מה" value={invoice.description || '—'} />
           <Detail label="הועלה ע״י" value={invoice.uploader_name ?? '—'} />
           <Detail label="תאריך העלאה" value={formatDateTime(invoice.uploaded_at)} />
@@ -146,12 +168,7 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
         <div className="p-5 border-b border-line">
           <div className="text-xs text-muted mb-2">קובץ חשבונית</div>
           {invoiceFileUrl ? (
-            <a
-              href={invoiceFileUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm font-medium underline underline-offset-2"
-            >
+            <a href={invoiceFileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline underline-offset-2">
               צפייה / הורדה
             </a>
           ) : (
@@ -169,6 +186,16 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
               <Detail label="מספר אסמכתא" value={invoice.payment_reference || '—'} />
               {invoice.payment_note && <Detail label="הערת תשלום" value={invoice.payment_note} full />}
             </div>
+            <div className="mt-3">
+              <div className="text-xs text-muted mb-1">קובץ אסמכתא</div>
+              {paymentProofFileUrl ? (
+                <a href={paymentProofFileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline underline-offset-2">
+                  צפייה / הורדה באסמכתא
+                </a>
+              ) : (
+                <span className="text-sm text-muted">לא צורף קובץ אסמכתא</span>
+              )}
+            </div>
           </div>
         )}
 
@@ -177,25 +204,14 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
           <div className="p-5 border-b border-line">
             <div className="text-xs text-muted mb-2">קבלה</div>
             {receiptFileUrl ? (
-              <a
-                href={receiptFileUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm font-medium underline underline-offset-2"
-              >
+              <a href={receiptFileUrl} target="_blank" rel="noopener noreferrer" className="text-sm font-medium underline underline-offset-2">
                 צפייה / הורדה בקבלה
               </a>
             ) : canEdit ? (
               <div>
                 <label className="inline-block bg-ink text-white text-sm font-medium px-4 py-2 cursor-pointer hover:opacity-90 transition-opacity">
                   {receiptLoading ? 'מעלה...' : 'העלאת קבלה'}
-                  <input
-                    type="file"
-                    accept="image/*,.pdf"
-                    onChange={handleReceiptUpload}
-                    disabled={receiptLoading}
-                    className="hidden"
-                  />
+                  <input type="file" accept="image/*,.pdf" onChange={handleReceiptUpload} disabled={receiptLoading} className="hidden" />
                 </label>
               </div>
             ) : (
@@ -231,51 +247,32 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
               <form onSubmit={handleMarkPaid} className="mt-4 border border-line p-4 flex flex-col gap-3 max-w-md">
                 <h3 className="font-medium text-sm">פרטי תשלום</h3>
                 <Field label="תאריך תשלום *">
-                  <input
-                    type="date"
-                    required
-                    className="itr-input"
-                    value={payForm.payment_date}
-                    onChange={(e) => setPayForm((f) => ({ ...f, payment_date: e.target.value }))}
-                  />
+                  <input type="date" required className="itr-input" value={payForm.payment_date}
+                    onChange={(e) => setPayForm((f) => ({ ...f, payment_date: e.target.value }))} />
                 </Field>
                 <Field label="אמצעי תשלום">
-                  <input
-                    type="text"
-                    placeholder="העברה בנקאית, צ׳ק, אשראי..."
-                    className="itr-input"
-                    value={payForm.payment_method}
-                    onChange={(e) => setPayForm((f) => ({ ...f, payment_method: e.target.value }))}
-                  />
+                  <input type="text" placeholder="העברה בנקאית, צ׳ק, אשראי..." className="itr-input" value={payForm.payment_method}
+                    onChange={(e) => setPayForm((f) => ({ ...f, payment_method: e.target.value }))} />
                 </Field>
                 <Field label="מספר אסמכתא">
-                  <input
-                    type="text"
-                    className="itr-input"
-                    value={payForm.payment_reference}
-                    onChange={(e) => setPayForm((f) => ({ ...f, payment_reference: e.target.value }))}
-                  />
+                  <input type="text" className="itr-input" value={payForm.payment_reference}
+                    onChange={(e) => setPayForm((f) => ({ ...f, payment_reference: e.target.value }))} />
+                </Field>
+                <Field label="קובץ אסמכתא (תמונה / PDF)">
+                  <input type="file" accept="image/*,.pdf" className="text-sm"
+                    onChange={(e) => setProofFile(e.target.files?.[0] ?? null)} />
                 </Field>
                 <Field label="הערה">
-                  <textarea
-                    className="itr-input min-h-[50px]"
-                    value={payForm.payment_note}
-                    onChange={(e) => setPayForm((f) => ({ ...f, payment_note: e.target.value }))}
-                  />
+                  <textarea className="itr-input min-h-[50px]" value={payForm.payment_note}
+                    onChange={(e) => setPayForm((f) => ({ ...f, payment_note: e.target.value }))} />
                 </Field>
                 <div className="flex gap-3">
-                  <button
-                    type="submit"
-                    disabled={payLoading}
-                    className="bg-ink text-white font-medium text-sm px-5 py-2 hover:opacity-90 disabled:opacity-50"
-                  >
+                  <button type="submit" disabled={payLoading}
+                    className="bg-ink text-white font-medium text-sm px-5 py-2 hover:opacity-90 disabled:opacity-50">
                     {payLoading ? 'שומר...' : 'אישור תשלום'}
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowPayForm(false)}
-                    className="border border-line text-sm px-4 py-2"
-                  >
+                  <button type="button" onClick={() => setShowPayForm(false)}
+                    className="border border-line text-sm px-4 py-2">
                     ביטול
                   </button>
                 </div>

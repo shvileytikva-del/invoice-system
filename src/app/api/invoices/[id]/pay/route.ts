@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/activityLog';
+import { sendWebhook } from '@/lib/webhook';
 
 // POST - mark as paid
 export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
@@ -14,7 +15,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   }
 
   const body = await request.json();
-  const { payment_date, payment_method, payment_reference, payment_note } = body;
+  const { payment_date, payment_method, payment_reference, payment_note, payment_proof_file } = body;
 
   if (!payment_date) {
     return NextResponse.json({ error: 'חסר תאריך תשלום' }, { status: 400 });
@@ -28,6 +29,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       payment_method: payment_method || null,
       payment_reference: payment_reference || null,
       payment_note: payment_note || null,
+      payment_proof_file: payment_proof_file || null,
     })
     .eq('id', params.id)
     .select()
@@ -43,6 +45,12 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     invoiceId: params.id,
     oldValue: { payment_status: 'pending' },
     newValue: { payment_status: 'paid', payment_date, payment_method, payment_reference },
+  });
+
+  await sendWebhook({
+    event: 'invoice_paid',
+    invoice: updated,
+    performed_by: appUser.name,
   });
 
   return NextResponse.json({ invoice: updated });
@@ -67,6 +75,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       payment_method: null,
       payment_reference: null,
       payment_note: null,
+      payment_proof_file: null,
     })
     .eq('id', params.id)
     .select()

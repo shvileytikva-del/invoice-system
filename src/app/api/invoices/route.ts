@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerSupabaseClient } from '@/lib/supabase/server';
 import { logActivity } from '@/lib/activityLog';
+import { sendWebhook } from '@/lib/webhook';
 
 export async function POST(request: NextRequest) {
   const supabase = createServerSupabaseClient();
@@ -25,8 +26,9 @@ export async function POST(request: NextRequest) {
 
   const body = await request.json();
   const {
-    id, // מזהה שנוצר בצד הלקוח לפני העלאת הקובץ (כדי שנתיב האחסון יהיה עקבי)
+    id,
     supplier_name,
+    supplier_email,
     invoice_number,
     invoice_date,
     amount,
@@ -36,15 +38,13 @@ export async function POST(request: NextRequest) {
     invoice_file,
   } = body;
 
-  // ולידציה בסיסית בצד השרת
-  if (!supplier_name || !invoice_number || !invoice_date || !due_date || !amount) {
+  if (!supplier_name || !invoice_number || !invoice_date || !amount) {
     return NextResponse.json({ error: 'חסרים שדות חובה' }, { status: 400 });
   }
   if (Number(amount) <= 0) {
     return NextResponse.json({ error: 'הסכום חייב להיות גדול מאפס' }, { status: 400 });
   }
 
-  // בדיקת כפילות ידידותית לפני ה-insert (ה-constraint ב-DB חוסם בכל מקרה כגיבוי)
   const { data: existing } = await supabase
     .from('invoices')
     .select('id')
@@ -64,11 +64,12 @@ export async function POST(request: NextRequest) {
     .insert({
       id,
       supplier_name,
+      supplier_email: supplier_email || null,
       invoice_number,
       invoice_date,
       amount,
       description: description || null,
-      due_date,
+      due_date: due_date || null,
       notes: notes || null,
       invoice_file: invoice_file || null,
       uploaded_by: appUser.id,
@@ -91,6 +92,13 @@ export async function POST(request: NextRequest) {
     action: `${appUser.name} העלה/תה חשבונית חדשה מספק "${supplier_name}"`,
     invoiceId: inserted.id,
     newValue: inserted,
+  });
+
+  // Webhook ל-Make: חשבונית חדשה הועלתה
+  await sendWebhook({
+    event: 'invoice_created',
+    invoice: inserted,
+    performed_by: appUser.name,
   });
 
   return NextResponse.json({ invoice: inserted }, { status: 201 });

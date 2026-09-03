@@ -14,6 +14,7 @@ export default function NewInvoicePage() {
 
   const [form, setForm] = useState({
     supplier_name: '',
+    supplier_email: '',
     invoice_number: '',
     invoice_date: '',
     amount: '',
@@ -44,7 +45,7 @@ export default function NewInvoicePage() {
     e.preventDefault();
     setError(null);
 
-    if (!form.supplier_name || !form.invoice_number || !form.invoice_date || !form.due_date || !form.amount) {
+    if (!form.supplier_name || !form.invoice_number || !form.invoice_date || !form.amount) {
       setError('נא למלא את כל שדות החובה');
       return;
     }
@@ -60,7 +61,8 @@ export default function NewInvoicePage() {
 
     try {
       if (file) {
-      const ext = file.name.split('.').pop() || 'pdf'; const safeName = 'invoice_' + Date.now() + '.' + ext;
+        const ext = file.name.split('.').pop() || 'pdf';
+        const safeName = 'invoice_' + Date.now() + '.' + ext;
         const path = `${invoiceId}/${safeName}`;
         const { error: uploadError } = await supabase.storage.from('invoices').upload(path, file, {
           upsert: false,
@@ -85,7 +87,6 @@ export default function NewInvoicePage() {
       const data = await res.json();
 
       if (!res.ok) {
-        // אם השמירה בטבלה נכשלה אחרי שהקובץ כבר הועלה - מנקים את הקובץ היתום
         if (invoiceFilePath) {
           await supabase.storage.from('invoices').remove([invoiceFilePath]);
         }
@@ -126,6 +127,15 @@ export default function NewInvoicePage() {
               required
             />
           </Field>
+          <Field label="מייל ספק (לשליחת אישור תשלום)">
+            <input
+              type="email"
+              className="itr-input"
+              placeholder="supplier@example.com"
+              value={form.supplier_email}
+              onChange={(e) => update('supplier_email', e.target.value)}
+            />
+          </Field>
           <Field label="מספר חשבונית *">
             <input
               type="text"
@@ -144,13 +154,12 @@ export default function NewInvoicePage() {
               required
             />
           </Field>
-          <Field label="תאריך אחרון לתשלום *">
+          <Field label="תאריך אחרון לתשלום">
             <input
               type="date"
               className="itr-input"
               value={form.due_date}
               onChange={(e) => update('due_date', e.target.value)}
-              required
             />
           </Field>
           <Field label="סכום (₪) *">
@@ -164,10 +173,11 @@ export default function NewInvoicePage() {
               required
             />
           </Field>
-          <Field label="קובץ החשבונית (תמונה / PDF)">
-            <input type="file" accept="image/*,.pdf" onChange={handleFileChange} className="text-sm" />
-          </Field>
         </div>
+
+        <Field label="קובץ החשבונית (תמונה / PDF)">
+          <input type="file" accept="image/*,.pdf" onChange={handleFileChange} className="text-sm" />
+        </Field>
         {fileError && <p className="text-overdue text-xs -mt-2">{fileError}</p>}
 
         <Field label="עבור מה">
