@@ -18,9 +18,11 @@ interface Props {
 export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFileUrl, paymentProofFileUrl, userRole }: Props) {
   const router = useRouter();
   const canEdit = userRole === 'secretary' || userRole === 'admin';
+  const isAdmin = userRole === 'admin';
   const [showPayForm, setShowPayForm] = useState(false);
   const [payLoading, setPayLoading] = useState(false);
   const [receiptLoading, setReceiptLoading] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [payForm, setPayForm] = useState({
@@ -83,6 +85,26 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
       router.refresh();
     } catch (err: any) {
       setError(err.message);
+    }
+  }
+
+  async function handleDelete() {
+    const ok = confirm(
+      `למחוק לצמיתות את החשבונית מ"${invoice.supplier_name}" (מס׳ ${invoice.invoice_number})?\n\nהפעולה תמחק גם את קובץ החשבונית והקבלה, ולא ניתן לשחזר.`
+    );
+    if (!ok) return;
+
+    setDeleteLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/invoices/${invoice.id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'מחיקת החשבונית נכשלה');
+      router.push('/');
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+      setDeleteLoading(false);
     }
   }
 
@@ -278,6 +300,22 @@ export default function InvoiceDetailClient({ invoice, invoiceFileUrl, receiptFi
                 </div>
               </form>
             )}
+          </div>
+        )}
+
+        {/* Delete (admin only) */}
+        {isAdmin && !showPayForm && (
+          <div className="p-5 border-t border-line bg-paper/40">
+            <button
+              onClick={handleDelete}
+              disabled={deleteLoading}
+              className="border border-overdue text-overdue font-medium text-sm px-5 py-2 hover:bg-overdueBg transition-colors disabled:opacity-50"
+            >
+              {deleteLoading ? 'מוחק...' : 'מחיקת חשבונית'}
+            </button>
+            <p className="text-xs text-muted mt-2">
+              המחיקה קבועה ומוחקת גם את קובץ החשבונית והקבלה. זמין למנהל/ת בלבד.
+            </p>
           </div>
         )}
       </div>
