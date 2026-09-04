@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
 
   const { data, error } = await service
     .from('invoices')
-    .select('id, supplier_name, invoice_number, amount, payment_date, payment_method, payment_reference, description')
+    .select('id, supplier_name, supplier_email, invoice_number, amount, payment_date, payment_method, payment_reference, description')
     .eq('payment_status', 'paid')
     .eq('receipt_status', 'missing')
     .lte('payment_date', cutoffStr)
